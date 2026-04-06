@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudyForge</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <!-- Tailwind config MUST come before the CDN script -->
+    <script>
+      tailwind = {
+        config: {
+          theme: {
+            extend: {
+              colors: {
+                navy:      '#050d1a',
+                'navy-2':  '#0d1929',
+                'navy-3':  '#112038',
+                gold:      '#c9a227',
+                'gold-lt': '#f0d060',
+                parchment: '#e8dcc8',
+                'parchment-dim': '#b8a898',
+              },
+              fontFamily: {
+                display: ['"Playfair Display"', 'Georgia', 'serif'],
+                body:    ['"Plus Jakarta Sans"', 'sans-serif'],
+              },
+              keyframes: {
+                fadeIn:    { from: { opacity: 0 }, to: { opacity: 1 } },
+                slideUp:   { from: { opacity: 0, transform: 'translateY(20px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
+                slideLeft: { from: { opacity: 0, transform: 'translateX(40px)' }, to: { opacity: 1, transform: 'translateX(0)' } },
+                slideRight:{ from: { opacity: 0, transform: 'translateX(-40px)' }, to: { opacity: 1, transform: 'translateX(0)' } },
+                pulse:     { '0%,100%': { opacity: 1 }, '50%': { opacity: 0.3 } },
+                shimmer:   { from: { backgroundPosition: '-200% 0' }, to: { backgroundPosition: '200% 0' } },
+                spin:      { to: { transform: 'rotate(360deg)' } },
+              },
+              animation: {
+                fadeIn:     'fadeIn 0.4s ease-out',
+                slideUp:    'slideUp 0.5s ease-out',
+                slideLeft:  'slideLeft 0.35s ease-out',
+                slideRight: 'slideRight 0.35s ease-out',
+                pulse:      'pulse 1.5s ease-in-out infinite',
+                shimmer:    'shimmer 2s linear infinite',
+                spin:       'spin 1s linear infinite',
+              },
+            },
+          },
+        },
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      * { box-sizing: border-box; }
+      html, body, #root { height: 100%; margin: 0; padding: 0; }
+      body {
+        background-color: #050d1a;
+        color: #e8dcc8;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        overflow: hidden;
+      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #050d1a; }
+      ::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.3); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(201,162,39,0.6); }
+      .gold-border { border: 1px solid rgba(201,162,39,0.25); }
+      .gold-glow { box-shadow: 0 0 20px rgba(201,162,39,0.15); }
+      .slide-enter { animation: slideLeft 0.35s ease-out; }
+      .slide-enter-reverse { animation: slideRight 0.35s ease-out; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
