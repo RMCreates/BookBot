@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const API_URL    = '/api/claude'   // proxied through Netlify Function — key never exposed to browser
+const API_URL    = '/.netlify/functions/claude'   // proxied through Netlify Function — key never exposed to browser
 const MODEL      = 'claude-sonnet-4-20250514'
 const PDF_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 

@@ -4,9 +4,7 @@
   functions = "netlify/functions"
 
 [functions]
-  timeout = 26
+  node_bundler = "esbuild"
 
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
+[functions.claude]
+  timeout = 26

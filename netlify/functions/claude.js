@@ -1,20 +1,17 @@
-export default async (req) => {
-  // Only allow POST
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+exports.handler = async function (event) {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method not allowed' }
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: { message: 'ANTHROPIC_API_KEY not configured on server.' } }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: { message: 'ANTHROPIC_API_KEY not configured on server.' } }),
+    }
   }
 
   try {
-    const body = await req.json()
-
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -22,20 +19,19 @@ export default async (req) => {
         'x-api-key':         apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(body),
+      body: event.body,
     })
 
     const data = await response.json()
-    return new Response(JSON.stringify(data), {
-      status: response.status,
+    return {
+      statusCode: response.status,
       headers: { 'Content-Type': 'application/json' },
-    })
+      body: JSON.stringify(data),
+    }
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: { message: err.message } }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: { message: err.message } }),
+    }
   }
 }
-
-export const config = { path: '/api/claude' }
