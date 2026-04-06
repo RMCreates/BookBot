@@ -795,11 +795,118 @@ function SlideViewer({ chapters, slides, selectedChapter, currentSlide, setCurre
   )
 }
 
+// ─── Download helper ──────────────────────────────────────────────────────────
+
+function generateHTML(chapters, slides) {
+  const chapterBlocks = chapters.map((ch, ci) => {
+    const chSlides = slides[ci] || []
+    const slideBlocks = chSlides.map((s, si) => {
+      let content = ''
+      if (s.type === 'title') {
+        content = `<div class="slide title-slide">
+          <div class="slide-label">Chapter ${ci + 1}</div>
+          <h1>${s.title}</h1>
+          ${s.subtitle ? `<p class="subtitle">${s.subtitle}</p>` : ''}
+          <hr/>
+          <p>${s.summary || ''}</p>
+        </div>`
+      } else if (s.type === 'concept') {
+        const bullets = (s.bullets || []).map(b => `<li>${b}</li>`).join('')
+        content = `<div class="slide">
+          <div class="slide-label">Key Concept</div>
+          <h2>${s.conceptName}</h2>
+          <p>${s.explanation || ''}</p>
+          ${bullets ? `<ul>${bullets}</ul>` : ''}
+        </div>`
+      } else if (s.type === 'model') {
+        const comps = (s.components || []).map(c => {
+          const item = typeof c === 'string' ? { label: c, detail: '' } : c
+          return `<div class="component-box"><strong>${item.label}</strong>${item.detail ? `<br/><small>${item.detail}</small>` : ''}</div>`
+        }).join('<span class="arrow">›</span>')
+        content = `<div class="slide">
+          <div class="slide-label">Framework / Model</div>
+          <h2>${s.modelName}</h2>
+          <p>${s.description || ''}</p>
+          <div class="components">${comps}</div>
+        </div>`
+      } else if (s.type === 'quiz') {
+        const qs = (s.questions || []).map((q, qi) => {
+          let qHtml = `<div class="question"><strong>Q${qi+1}.</strong> ${q.question}`
+          if (q.kind === 'mcq') {
+            const opts = (q.options || []).map((o, oi) => {
+              const letter = ['A','B','C','D'][oi]
+              const isCorrect = letter === q.correct
+              return `<div class="option ${isCorrect ? 'correct' : ''}">${letter}. ${o}${isCorrect ? ' ✓' : ''}</div>`
+            }).join('')
+            qHtml += opts
+          } else {
+            qHtml += `<div class="fitb-answer">Answer: <strong>${q.answer}</strong></div>`
+          }
+          return qHtml + '</div>'
+        }).join('')
+        content = `<div class="slide quiz-slide">
+          <div class="slide-label">Quiz</div>
+          <h2>Test Your Knowledge</h2>
+          ${qs}
+        </div>`
+      }
+      return content
+    }).join('\n')
+    return `<section class="chapter"><h2 class="chapter-title">Chapter ${ci + 1}: ${ch.title}</h2>${slideBlocks}</section>`
+  }).join('\n')
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>StudyForge Export</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050d1a;color:#e8dcc8;font-family:'Plus Jakarta Sans',sans-serif;padding:40px 20px}
+  .chapter{max-width:800px;margin:0 auto 60px}
+  .chapter-title{font-family:'Playfair Display',serif;color:#c9a227;font-size:1.5rem;border-bottom:1px solid rgba(201,162,39,0.3);padding-bottom:12px;margin-bottom:24px}
+  .slide{background:#0d1929;border:1px solid rgba(201,162,39,0.25);border-radius:16px;padding:32px;margin-bottom:20px;page-break-inside:avoid}
+  .title-slide{text-align:center}
+  .title-slide h1{font-family:'Playfair Display',serif;color:#c9a227;font-size:2rem;margin:12px 0}
+  .title-slide .subtitle{font-family:'Playfair Display',serif;font-style:italic;color:#b8a898;font-size:1.1rem;margin-bottom:16px}
+  .title-slide hr{border:none;border-top:1px solid rgba(201,162,39,0.4);width:60px;margin:16px auto}
+  .slide-label{font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(201,162,39,0.6);margin-bottom:8px}
+  h2{font-family:'Playfair Display',serif;color:#c9a227;font-size:1.4rem;margin-bottom:12px}
+  p{color:#e8dcc8;line-height:1.7;font-size:0.9rem}
+  ul{margin:16px 0 0 20px;space-y:8px}
+  li{color:#e8dcc8;font-size:0.9rem;margin-bottom:8px;line-height:1.6}
+  .components{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
+  .component-box{background:#050d1a;border:1px solid rgba(201,162,39,0.4);border-radius:10px;padding:12px 16px;font-size:0.85rem;flex:1;min-width:120px}
+  .component-box strong{color:#e8dcc8;display:block;margin-bottom:4px}
+  .component-box small{color:#b8a898}
+  .arrow{color:rgba(201,162,39,0.4);font-size:1.5rem;align-self:center}
+  .quiz-slide .question{background:#050d1a;border-radius:10px;padding:16px;margin-top:12px}
+  .quiz-slide .question strong{color:#e8dcc8;display:block;margin-bottom:8px;font-size:0.9rem}
+  .option{padding:8px 12px;border-radius:8px;font-size:0.85rem;color:#b8a898;margin-top:4px}
+  .option.correct{color:#34d399;font-weight:600}
+  .fitb-answer{margin-top:8px;color:#34d399;font-size:0.85rem}
+  @media print{body{background:#fff;color:#000}.slide{border-color:#ccc;background:#f9f9f9}.chapter-title,.title-slide h1,h2{color:#8b6914}.slide-label{color:#8b6914}}
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:48px">
+  <h1 style="font-family:'Playfair Display',serif;color:#c9a227;font-size:2.5rem">StudyForge</h1>
+  <p style="color:#b8a898;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;margin-top:8px">Exported Study Deck · ${new Date().toLocaleDateString()}</p>
+</div>
+${chapterBlocks}
+</body>
+</html>`
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
+const STORAGE_KEY = 'studyforge_session'
+
 export default function App() {
-  const [stage,          setStage]          = useState('input')   // 'input' | 'loading' | 'ready'
-  const [loadingPhase,   setLoadingPhase]   = useState(null)      // 'extracting' | 'agent1' | 'agent2'
+  const [stage,          setStage]          = useState('input')
+  const [loadingPhase,   setLoadingPhase]   = useState(null)
   const [loadingDetail,  setLoadingDetail]  = useState('')
   const [agent2Progress, setAgent2Progress] = useState({ done: 0, total: 0 })
   const [chapters,       setChapters]       = useState([])
@@ -807,6 +914,54 @@ export default function App() {
   const [selectedChapter,setSelectedChapter]= useState(0)
   const [currentSlide,   setCurrentSlide]   = useState(0)
   const [error,          setError]          = useState(null)
+  const [hasSaved,       setHasSaved]       = useState(false)
+
+  // Load saved session check on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) setHasSaved(true)
+    } catch {}
+  }, [])
+
+  // Auto-save whenever chapters+slides update
+  useEffect(() => {
+    if (chapters.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ chapters, slides }))
+        setHasSaved(true)
+      } catch {}
+    }
+  }, [chapters, slides])
+
+  const resumeSession = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
+      if (saved?.chapters?.length) {
+        setChapters(saved.chapters)
+        setSlides(saved.slides || {})
+        setSelectedChapter(0)
+        setCurrentSlide(0)
+        setStage('ready')
+      }
+    } catch {}
+  }
+
+  const clearSession = () => {
+    localStorage.removeItem(STORAGE_KEY)
+    setHasSaved(false)
+  }
+
+  const downloadHTML = () => {
+    const html = generateHTML(chapters, slides)
+    const blob = new Blob([html], { type: 'text/html' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = 'studyforge-export.html'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const handleSelectChapter = (idx) => {
     setSelectedChapter(idx)
@@ -997,7 +1152,26 @@ Return ONLY this JSON structure (no markdown, no code fences):
       <ErrorBanner />
 
       {stage === 'input' && (
-        <InputPanel onSubmit={handleSubmit} loading={false} />
+        <>
+          <InputPanel onSubmit={handleSubmit} loading={false} />
+          {hasSaved && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-navy-2 border border-gold/30 rounded-2xl px-5 py-3 animate-slideUp shadow-xl font-body">
+              <span className="text-xs text-parchment-dim">You have a saved session</span>
+              <button
+                onClick={resumeSession}
+                className="px-3 py-1.5 rounded-lg bg-gold/20 border border-gold/40 text-gold text-xs font-medium hover:bg-gold/30 transition-colors"
+              >
+                Resume →
+              </button>
+              <button
+                onClick={clearSession}
+                className="text-parchment-dim/50 hover:text-parchment-dim text-xs transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {stage === 'loading' && (
@@ -1025,13 +1199,21 @@ Return ONLY this JSON structure (no markdown, no code fences):
               setCurrentSlide={setCurrentSlide}
             />
           </main>
-          {/* Reset button */}
-          <button
-            onClick={() => { setStage('input'); setChapters([]); setSlides({}); setError(null) }}
-            className="fixed bottom-6 right-6 px-4 py-2 rounded-xl text-xs font-body text-parchment-dim hover:text-parchment bg-navy-2 border border-white/10 hover:border-white/20 transition-all duration-200"
-          >
-            ← New Book
-          </button>
+          {/* Bottom action buttons */}
+          <div className="fixed bottom-6 right-6 flex items-center gap-2 font-body">
+            <button
+              onClick={downloadHTML}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium text-gold bg-gold/10 border border-gold/30 hover:bg-gold/20 transition-all duration-200"
+            >
+              <IconUpload className="rotate-180" /> Download Slides
+            </button>
+            <button
+              onClick={() => { setStage('input'); setError(null) }}
+              className="px-4 py-2 rounded-xl text-xs text-parchment-dim hover:text-parchment bg-navy-2 border border-white/10 hover:border-white/20 transition-all duration-200"
+            >
+              ← New Book
+            </button>
+          </div>
         </div>
       )}
     </div>
