@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const API_URL = 'https://api.anthropic.com/v1/messages'
-const MODEL   = 'claude-sonnet-4-20250514'
+const API_URL    = '/api/claude'   // proxied through Netlify Function — key never exposed to browser
+const MODEL      = 'claude-sonnet-4-20250514'
 const PDF_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -38,12 +38,7 @@ async function extractPdfText(file, onProgress) {
 async function callClaude(system, userMessage) {
   const res = await fetch(API_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type':         'application/json',
-      'x-api-key':            '',
-      'anthropic-version':    '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model:      MODEL,
       max_tokens: 4000,
